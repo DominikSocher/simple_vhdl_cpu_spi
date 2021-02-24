@@ -32,7 +32,7 @@ This repository consists of the raw VHDL files.
 ## 2 System architecture
 The system uses the Intel Altera FPGA circuit MAX 10 and the accelerometer ADXL345 and a VHLD soft system.
 The accelerometer controller consits of a input filter, CPU calles accelerometer controller, a VGA grafic generator, a VGA kontroller and a SPI controller. All five subcomponents will be discussed in the following chapters. The follwoing figure gives an overview of the system.
-![alt text](system_top.png "System Top")
+![System Top](system_top.png "System Top")
 
 ### 2.1 System flow
 The system uses a ROM where the porgramm instructions are saved for booth the accelerometer controller and the SPI controller. The program instructes the CPU to follwing behavior. See following figure.
