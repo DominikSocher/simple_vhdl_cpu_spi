@@ -1,100 +1,85 @@
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
 
 # G-Force measurement
-## A simple CPU with SPI interface
 
-<br>
-<br>
+## A simple CPU with SPI interface**
 
- Dominik Socher  
- 27.02.2021  
-
-<br>
-<br>
+**Dominik Socher**  
+**27.02.2021**  
 
 This report describes an embedded system. The system logs acceleration data from a sensor (ADXL345) and presents the data in form of dots on a VGA-screen. The sensor measures the X/Y/Z axis in relation gravity. The hardware consists of a simple processor which follows a program stored in ROM. A program counter points on the memory address. The ROM outputs 20 bit of data whereof  4-bit are CPU instructions and the remaining 16 bits are ADXL345 instructions. Another component of the system is a co processor for the serial master interface (SPI). This co processor controls the SPI and supervised its timing. The sensor outputs 8 bit of data which are low and high byte of a corresponding axis. The co processor samples these 8 bit of data and combines them to 16 bit of data which now consist the whole axis value. The data gets send to the CPU where it gets stored by the CPU to a RAM. The VGA interface reads that RAM and computes data to the screen.
 
-<br>
-<br>
-
 ## Table of contents
-* [1 General info](#1-general-info)
-* [2 System architecture](#2-system-architecture)
-* [2.1 System flow](#2.1-system-flow)
-* [2.2 Input and Output](#2.2-input-and-output)
-* [2.3 Package and library](#2.3-package-and-library)
-* [3 Components](#3-components)
-* [3.1 Input filter](#3.1-input-filter)
-* [3.2 CPU](#3.2-CPU)
-* [3.2.1 Function](#3.2.1-function)
-* [3.2.2 Finite state machine](#3.2.2-finite-state-machine)
-* [3.2.3 Program ROM](#3.2.3-program-rom)
-* [3.3 Graphic processor](#3.3-graphic-processor)
-* [3.3.1 Function and state machine](#3.3.1-function-and-state-machine)
-* [3.4 VGA Controller](#3.4-vga-controller)
-* [3.4.1 VGA_Sync](#3.4.1-vga_sync)
-* [3.5 SPI controller](#3.5-spi-controller)
-* [3.5.1 Statemachine and function](#3.5.1-statemachine-and-function)
-* [4 TIMING](#4-TIMING)
-* [5 Verification](#5-verification)
-* [5.1 Case 1](#5.1-case-1)
-* [5.2 Case 2](#5.2-case-2)
-* [5.3 Case 3](#5.3-case-3)
-* [5.4 Case 4](#5.4-case-4)
-* [5.5 Case 5](#5.5-case-5)
-* [6 Analysis](#6-analysis)
 
-<br>
-<br>
-<br>
+- [G-Force measurement](#g-force-measurement)
+  - [A simple CPU with SPI interface**](#a-simple-cpu-with-spi-interface)
+  - [Table of contents](#table-of-contents)
+  - [1 General info](#1-general-info)
+  - [2 System architecture](#2-system-architecture)
+    - [2.1 System flow](#21-system-flow)
+    - [2.2 Input and Output](#22-input-and-output)
+    - [2.3 Package and library](#23-package-and-library)
+  - [3 Components](#3-components)
+    - [3.1 Input filter](#31-input-filter)
+  - [3.2 CPU](#32-cpu)
+    - [3.2.1 Function](#321-function)
+    - [3.2.2 Finite state machine](#322-finite-state-machine)
+    - [3.2.3 Program ROM](#323-program-rom)
+  - [3.3 Graphic processor](#33-graphic-processor)
+    - [3.3.1 Function and state machine](#331-function-and-state-machine)
+  - [3.4 VGA Controller](#34-vga-controller)
+    - [3.4.1 VGA_Sync](#341-vga_sync)
+  - [3.5 SPI controller](#35-spi-controller)
+    - [3.5.1 State machine and function](#351-state-machine-and-function)
+  - [4 TIMING](#4-timing)
+  - [5 Verification](#5-verification)
+    - [5.1 Case 1](#51-case-1)
+    - [5.2 Case 2](#52-case-2)
+    - [5.3 Case 3](#53-case-3)
+    - [5.4 Case 4](#54-case-4)
+    - [5.5 Case 5](#55-case-5)
+  - [6 Analysis](#6-analysis)
 
 ## 1 General info
+
 This project is the examination project of the TEIS VHDL system course. 
 This repository consists of the raw VHDL files.
 
-
 ## 2 System architecture
+
 The system uses the Intel Altera FPGA circuit MAX 10 and the accelerometer ADXL345 and a VHLD soft system.
 The accelerometer controller consists of a input filter, CPU called accelerometer controller, a VGA graphic generator, a VGA controller and a SPI controller. All five sub components will be discussed in the following chapters. The following figure gives an overview of the system.
-
 
 ![System Top](system_top.png "System Top")  
 **Figure 1 System architecture**  
 
 ### 2.1 System flow
+
 The system uses a ROM where the program instructions are saved for booth the accelerometer controller and the SPI controller. The program instructs the CPU to following behavior. See following figure.
 
 ![alt text](flowchart.png "Flow chart")  
 **Figure 2 Flowchart**  
 
 ### 2.2 Input and Output
-The following table shows the I/O of the system    
 
-**Table 1 Main I/O**
+The following table shows the I/O of the system
+
 Name | Type | Description
 ------------ | ------------- | -------------
 clk_50_in | INPUT | 50 MHz system clock
-rst_n_in | INPUT | Reset active low, asynchronous 
+rst_n_in | INPUT | Reset active low, asynchronous
 vga_vs | OUTPUT | Vertical sync VGA
 vga_hs | OUTPUT | Horizontal sync VGA
 vga_r | OUTPUT | Color red
 vga_g | OUTPUT | Color green
 vga_b | OUTPUT | Color blue
-miso_in | INPUT| SPI data input 
+miso_in | INPUT| SPI data input
 mosi_out | OUTPUT | SPI data output
 sck_out | OUTPUT | Serial clock
 ss_out | OUTPUT | SLave select
-
-<br>
+**Table 1 Main I/O**
 
 ### 2.3 Package and library
+
 The project uses the following VHDL library's and packages
 
 * IEEE - contains the standard package for datatype and operations
@@ -104,22 +89,22 @@ The project uses the following VHDL library's and packages
 The is project was created in Quartus v. 18.1 and simulated in Model Sim.
 
 ## 3 Components
+
 This chapter describes all the sub components of the system.
 
 ### 3.1 Input filter
+
 * Component name : input_filter
 * Instance name : input_filter_inst
 
 The input filter synchronizes the asynchronous reset input with two D-type-flip-flops to the system clock. The following table shows the components input.  
 
-**Table 2 Input filter I/O**
 Name           | Description
 -------------  | -------------
 clk_50_in      | Input for system clock
 reset_n_in     | reset active low asynchronous
 reset_sync_out | Synchronized reset output
-
-<br>
+**Table 2 Input filter I/O**
 
 The following figure shows the resistor transfer level of the component.  
 
@@ -127,15 +112,13 @@ The following figure shows the resistor transfer level of the component.
 **Figure 3 Input filter**
 
 ## 3.2 CPU
+
 The main CPU of the system is called accelerometer_controller. The processor is the main driver for the system and controls the data flow between the SPI part. Furthermore, has the CPU the capability to save data into RAM.
 
 * Component name : accelerometer_controller
 * Instance name : acc_inst
 
-The following table shows the components I/O. 
-<br>
-
-**Table 3 CPU I/O**
+The following table shows the components I/O.
 
 Name           | Description
 -------------  | -------------
@@ -146,15 +129,15 @@ data_ram_out   | RAM data output
 data_ready_out | Ready flag to SPI
 hold main_in   | Stall signal for CPU
 rx_data_in     | Data input from SPI
-
-<br>
+**Table 3 CPU I/O**
 
 The following figure shows the RTL of the CPU
 
 ![alt text](cpu.png "RTL CPU")  
 **Figure 4 RTL CPU**  
 
-#### 3.2.1 Function
+### 3.2.1 Function
+
 The Cpu is clock via the system clock. The finite state machine can execute five assembler instructions.
 
 * NOP
@@ -175,6 +158,7 @@ The next phase is the execution phase in which the assembler instruction is gett
 **Figure 5 Mode of operation**  
 
 ### 3.2.2 Finite state machine
+
 The processor consists of 13 states total. The next figure gives an overview of the transitions.  
 
 ![alt text](fsm.png "Finite state machine")  
@@ -206,13 +190,11 @@ Increment RAM address bus by one and set write enable bit.
 Reset write enable bit.
 * Execute jump
 Jump to address register six.
-<br>
 
 ### 3.2.3 Program ROM
-The instructions and the data that the CPU executes och sends are stored inside a ROM. The first instruction is empty data send to the SPI unit to ensure SPI timing protocol. The following table gives an overview of the memory content. The content is in hexadecimal.  
-<br>
 
-**Table 3 Program code**
+The instructions and the data that the CPU executes och sends are stored inside a ROM. The first instruction is empty data send to the SPI unit to ensure SPI timing protocol. The following table gives an overview of the memory content. The content is in hexadecimal.  
+
 Address  | Machine code | Instruction | Assembler code | Data | ADXL345
 ------  | --------- | --------- | --------- | --------- | --------- |
 0 | 00001 | 1 | WRITE | 0000 | -
@@ -238,15 +220,15 @@ Address  | Machine code | Instruction | Assembler code | Data | ADXL345
 20 | 00002 | 2 | READ | 0000 | -
 21 | 00003 | 3 | STORE | 0000 | -
 22 | 00004 | 4 | JUMP | 0000| -
-<br>
+**Table 3 Program code**
 
 ## 3.3 Graphic processor
+
 * Component name : vga_grafic
 * Instance name : grafic_inst
 
 The following table shows the components I/O  
 
-**Table 4 Graphic processor I/O**
 Name           | Description
 -------------  | -------------
 clk_in         | Input for system clock
@@ -256,9 +238,10 @@ we_b_out | write enable to video ram
 data_b_out | data to video ram
 adress_b_out | address bus to video ram
 display_on_in | display time vga
-<br>
+**Table 4 Graphic processor I/O**
 
 ### 3.3.1 Function and state machine
+
 The component calculates the actual x/y/z position. The state machine processes the data and sends it as a 3-bit vector in combination with the video RAM address to the VGA controller. The state machine is a simple machine which is getting initialized by the data ready signal from the main CPU. The following figure shows the state machine.  
 
 ![alt text](fsmvideo.png "Finite state machine")  
@@ -274,10 +257,12 @@ delay state
 clear screen
 
 ## 3.4 VGA Controller
+
 * Component name : vga_controller
 * Instance name : vga_controller_inst
 
-The VGA controller consists of three sub components 
+The VGA controller consists of three sub components
+
 * PLL 25 MHZ
 * dual port RAM
 * vga_sync
@@ -288,12 +273,13 @@ The following figure shows the VGA controller.
 **Figure 8 VGA-controller**  
 
 ### 3.4.1 VGA_Sync
+
 * Component name : vga_sync
 * Instance name : vga_sync_inst
 
 The component reads pixel data from the RAM and prints it out to the screen. Below is the code that describes the behavior of the component
 
-```
+```vdhl
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
@@ -386,17 +372,16 @@ BEGIN
         (OTHERS => '0');
 END rtl;
 ```
-<br>
 
 ## 3.5 SPI controller
+
 * Component name : spi_controller
 * Instance name : spi_controller_inst
- 
- The SPI controller consist of a SPI master and a co processor. The SPI master is an IP by [DIGIKEY](https://www.digikey.com/eewiki/pages/viewpage.action?pageId=4096096)
+
+The SPI controller consist of a SPI master and a co processor. The SPI master is an IP by [DIGIKEY](https://www.digikey.com/eewiki/pages/viewpage.action?pageId=4096096)
 
 The following table gives an overview of the I/O  
 
-**Table 5 SPI-Controller I/O**
 Name           | Description
 -------------  | -------------
 clk_in | system clock
@@ -408,11 +393,11 @@ sclk | serial clock
 ss | slave select
 mosi | master out slave in
 hold_main_out | stall main cpu
-rx_data_out | caputred miso data
-
-<br>
+rx_data_out | captured miso data
+**Table 5 SPI-Controller I/O**
 
 ### 3.5.1 State machine and function
+
 ![alt text](fsmspi.png "Finite state machine")  
 **Figure 9 Finite state machine**  
 
@@ -430,11 +415,12 @@ The state fill the rx buffer first low byte then high byte to get valid data. Th
 When in this state the machine succeeded transmit 16 bit of data to the cpu
 * BREAK
 Pause of 200 ns between transactions
-	
+
 ## 4 TIMING
+
 The timing got verified with the following sdc code
 
-```
+``` sdc
 #sdc file acceleration_probe
 #take care of time uncertainty
 derive_clock_uncertainty
@@ -459,28 +445,26 @@ set_output_delay -clock { clk_50_in } -max 2.05 [get_ports {vga_b_out[0] vga_g_o
 set_output_delay -clock { clk_50_in } -min 1 [get_ports {mosi_out sck_out ss_out[0]}]
 set_output_delay -clock { clk_50_in } -max 2.05 [get_ports {mosi_out sck_out ss_out[0]}]
 ```
+
 The system passed the timing test. The following tables show the worst slack/hold times.  
 
-**Table 6 Setup time**
 Setup time | SLACK
 ------ | ------
 clk_50 | 8.937
 vga_clk | 32.048
-<br>
+**Table 6 Setup time**
 
-
-**Table 7 Hold time**
 Hold time | SLACK
 ------ | ------
 clk_50 | 0.242
 vga_clk | 0.570
-<br>
+**Table 7 Hold time**
 
 ## 5 Verification
 
 The test protocol is presented in the following table. The system passed all tests. To simulate MISO data this test stimulus is used.
 
-```
+```vdhl
 	MISO_TEST : process(sck_out)
 	variable MISO_TEST : std_logic_vector(15 downto 0) := x"AABB";
 	variable i : integer := 15;
@@ -494,9 +478,7 @@ The test protocol is presented in the following table. The system passed all tes
 		end if;
 	end process MISO_TEST;
 ```  
-<br>
 
-**Table 8 Test protocol**
 Case | Description | Acceptance | Verification
 ------ | ------ | ------ | ------ 
 1 | reset 1 to 0 | reset system | yes
@@ -504,15 +486,17 @@ Case | Description | Acceptance | Verification
 3 | New data to SPI | transition data ready -> new data latches in | yes
 4 | MISO test stimulus | MISO data should pulse | yes
 5 | Send data when 16-bit full | Buffer fills in two clock cycles | yes
-<br>
+**Table 8 Test protocol**
 
 ### 5.1 Case 1
+
 The following figure shows the passed test. After reset low the system got reset.  
 
 ![alt text](case1.png "Case 1")  
 **Figure 10 Case 1**  
 
 ### 5.2 Case 2
+
 In case 2 the cpu executes NOP as long as hold_main is high. See figures
 
 ![alt text](case21.png "Case 2.1")  
@@ -522,18 +506,21 @@ In case 2 the cpu executes NOP as long as hold_main is high. See figures
 **Figure 12 Case 2.2**  
 
 ### 5.3 Case 3
+
 The following figure shows that new data laches into the data bus when data ready is high.  
 
 ![alt text](case3.png "Case 3")  
 **Figure 13 Case 3**  
 
 ### 5.4 Case 4
+
 The test stimulus for MISO should pulse during a transaction. See following figure.  
 
 ![alt text](case4.png "Case 4")  
 **Figure 14 Case 4**  
 
 ### 5.5 Case 5
+
 When the rx buffer holds 16-bit of data the data gets send.  
 
 ![alt text](case5.png "Case 5")  
@@ -543,7 +530,6 @@ When the rx buffer holds 16-bit of data the data gets send.
 
 The whole system is downloadable to the MAX 10 FPGA circuit. The table below gives detailed information about the resources.  
 
-**Table 9 System resources**
 Resource | Amount
 ------ | ------
 logical element | 617 / 49,760 (1%)
@@ -552,5 +538,4 @@ pins | 11 / 360 (3%)
 memory bits | 204544 / 1677312 (12%)
 PLL | 1 / 4 (25%)
 total effect | 161-13 mW
-
-<br>
+**Table 9 System resources**
