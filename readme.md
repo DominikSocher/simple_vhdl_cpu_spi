@@ -1,7 +1,7 @@
 
 # G-Force measurement
 
-## A simple CPU with SPI interface**
+## A simple CPU with SPI interface
 
 **Dominik Socher**  
 **27.02.2021**  
