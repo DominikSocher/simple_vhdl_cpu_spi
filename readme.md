@@ -23,22 +23,6 @@ This report describes an embedded system. The system logs acceleration data from
 
 <br>
 <br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-
-<br>
-<br>
-<br>
 
 ## Table of contents
 * [1 General info](#1-general-info)
@@ -70,49 +54,28 @@ This report describes an embedded system. The system logs acceleration data from
 <br>
 <br>
 <br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-
-
-<br>
-<br>
-<br>
 
 ## 1 General info
 This project is the examination project of the TEIS VHDL system course. 
 This repository consists of the raw VHDL files.
-<br>
+
 
 ## 2 System architecture
 The system uses the Intel Altera FPGA circuit MAX 10 and the accelerometer ADXL345 and a VHLD soft system.
 The accelerometer controller consists of a input filter, CPU called accelerometer controller, a VGA graphic generator, a VGA controller and a SPI controller. All five sub components will be discussed in the following chapters. The following figure gives an overview of the system.
-<br>
+
 
 ![System Top](system_top.png "System Top")  
-**Figure 1 System architecture**
+**Figure 1 System architecture**  
 
 ### 2.1 System flow
-<br>
 The system uses a ROM where the program instructions are saved for booth the accelerometer controller and the SPI controller. The program instructs the CPU to following behavior. See following figure.
-<br>
 
 ![alt text](flowchart.png "Flow chart")  
-**Figure 2 Flowchart**
+**Figure 2 Flowchart**  
 
 ### 2.2 Input and Output
-<br>
-The following table shows the I/O of the system  
-<br>
+The following table shows the I/O of the system    
 
 **Table 1 Main I/O**
 Name | Type | Description
@@ -128,6 +91,8 @@ miso_in | INPUT| SPI data input
 mosi_out | OUTPUT | SPI data output
 sck_out | OUTPUT | Serial clock
 ss_out | OUTPUT | SLave select
+
+<br>
 
 ### 2.3 Package and library
 The project uses the following VHDL library's and packages
@@ -146,7 +111,6 @@ This chapter describes all the sub components of the system.
 * Instance name : input_filter_inst
 
 The input filter synchronizes the asynchronous reset input with two D-type-flip-flops to the system clock. The following table shows the components input.  
-<br>
 
 **Table 2 Input filter I/O**
 Name           | Description
@@ -155,8 +119,9 @@ clk_50_in      | Input for system clock
 reset_n_in     | reset active low asynchronous
 reset_sync_out | Synchronized reset output
 
-The following figure shows the resistor transfer level of the component.
 <br>
+
+The following figure shows the resistor transfer level of the component.  
 
 ![alt text](input_filter.png "RTL input filter")  
 **Figure 3 Input filter**
@@ -182,11 +147,12 @@ data_ready_out | Ready flag to SPI
 hold main_in   | Stall signal for CPU
 rx_data_in     | Data input from SPI
 
-The following figure shows the RTL of the CPU
 <br>
 
+The following figure shows the RTL of the CPU
+
 ![alt text](cpu.png "RTL CPU")  
-**Figure 4 RTL CPU**
+**Figure 4 RTL CPU**  
 
 #### 3.2.1 Function
 The Cpu is clock via the system clock. The finite state machine can execute five assembler instructions.
@@ -203,20 +169,16 @@ READ means the CPU is latching ingoing data. The WRITE instruction writes instru
 
 The processor works in three or four phases (see following figure). The first phase is the fetch phase in which the next instructions is getting fetched from the ROM. The phase is divided to four clock cycles to prevent data loss. In the first cycle the program counter gets allocated to the ROM address. Cycle two eventually clears flags. In cycle three and four the instructions are getting assigned. 
 The next phase is the decode phase in which the CPU checks what to execute. The phase is divided into two cycles to prevent data loss. The first cycle increments the program counter and the second one decodes which assembler instruction to execute.
-The next phase is the execution phase in which the assembler instruction is getting executed.
-<br>
+The next phase is the execution phase in which the assembler instruction is getting executed.  
 
 ![alt text](processor.png "Mode of operation")  
-**Figure 5 Mode of operation**
-<br>
+**Figure 5 Mode of operation**  
 
 ### 3.2.2 Finite state machine
-The processor consists of 13 states total. The next figure gives an overview of the transitions. 
-<br>
+The processor consists of 13 states total. The next figure gives an overview of the transitions.  
 
 ![alt text](fsm.png "Finite state machine")  
-**Figure 6 Finite state machine**
-
+**Figure 6 Finite state machine**  
 
 * Fetch 1
 If hold_main_in low the state allocates the program counter to the address bus. If high the processor executes NOP.
@@ -284,7 +246,6 @@ Address  | Machine code | Instruction | Assembler code | Data | ADXL345
 
 The following table shows the components I/O  
 
-
 **Table 4 Graphic processor I/O**
 Name           | Description
 -------------  | -------------
@@ -298,11 +259,10 @@ display_on_in | display time vga
 <br>
 
 ### 3.3.1 Function and state machine
-The component calculates the actual x/y/z position. The state machine processes the data and sends it as a 3-bit vector in combination with the video RAM address to the VGA controller. The state machine is a simple machine which is getting initialized by the data ready signal from the main CPU. The following figure shows the state machine.
-<br>
+The component calculates the actual x/y/z position. The state machine processes the data and sends it as a 3-bit vector in combination with the video RAM address to the VGA controller. The state machine is a simple machine which is getting initialized by the data ready signal from the main CPU. The following figure shows the state machine.  
 
 ![alt text](fsmvideo.png "Finite state machine")  
-**Figure 7 Finite state machine**
+**Figure 7 Finite state machine**  
 
 * IDLE 
 wait for ready signal
@@ -325,7 +285,7 @@ The VGA controller consists of three sub components
 The following figure shows the VGA controller.
 
 ![alt text](vga_controller.png "VGA controller")  
-**Figure 8 VGA-controller**
+**Figure 8 VGA-controller**  
 
 ### 3.4.1 VGA_Sync
 * Component name : vga_sync
@@ -436,8 +396,6 @@ END rtl;
 
 The following table gives an overview of the I/O  
 
-<br>
-
 **Table 5 SPI-Controller I/O**
 Name           | Description
 -------------  | -------------
@@ -452,11 +410,13 @@ mosi | master out slave in
 hold_main_out | stall main cpu
 rx_data_out | caputred miso data
 
+<br>
+
 ### 3.5.1 State machine and function
 ![alt text](fsmspi.png "Finite state machine")  
-**Figure 9 Finite state machine**
+**Figure 9 Finite state machine**  
 
-The state machine processes SPI data and controls the system so the SPI master can stay inside SPI timing parameters. Furthermore, guards the machine the spi master.
+The state machine processes SPI data and controls the system so the SPI master can stay inside SPI timing parameters. Furthermore, guards the machine the spi master.  
 
 * IDLE 
 After the reset increments a counter to give the spi master time to get ready. If there is ny data from the CPU the machine transits to TRANSMIT
@@ -500,7 +460,6 @@ set_output_delay -clock { clk_50_in } -min 1 [get_ports {mosi_out sck_out ss_out
 set_output_delay -clock { clk_50_in } -max 2.05 [get_ports {mosi_out sck_out ss_out[0]}]
 ```
 The system passed the timing test. The following tables show the worst slack/hold times.  
-<br>
 
 **Table 6 Setup time**
 Setup time | SLACK
@@ -548,41 +507,37 @@ Case | Description | Acceptance | Verification
 <br>
 
 ### 5.1 Case 1
-The following figure shows the passed test. After reset low the system got reset.
-<br>
+The following figure shows the passed test. After reset low the system got reset.  
 
-![alt text](case1.png "Case 1")
-**Figure 10 Case 1**
-
-<br>
+![alt text](case1.png "Case 1")  
+**Figure 10 Case 1**  
 
 ### 5.2 Case 2
 In case 2 the cpu executes NOP as long as hold_main is high. See figures
 
 ![alt text](case21.png "Case 2.1")  
-**Figure 11 Case 2.1**
+**Figure 11 Case 2.1**  
 
 ![alt text](case22.png "Case 2.2")  
-**Figure 12 Case 2.2**
+**Figure 12 Case 2.2**  
 
 ### 5.3 Case 3
-The following figure shows that new data laches into the data bus when data ready is high.
+The following figure shows that new data laches into the data bus when data ready is high.  
 
 ![alt text](case3.png "Case 3")  
-**Figure 13 Case 3**
+**Figure 13 Case 3**  
 
 ### 5.4 Case 4
-The test stimulus for MISO should pulse during a transaction. See following figure.
+The test stimulus for MISO should pulse during a transaction. See following figure.  
 
 ![alt text](case4.png "Case 4")  
-**Figure 14 Case 4**
+**Figure 14 Case 4**  
 
 ### 5.5 Case 5
-When the rx buffer holds 16-bit of data the data gets send.
+When the rx buffer holds 16-bit of data the data gets send.  
 
 ![alt text](case5.png "Case 5")  
-**Figure 15 Case 5**
-<br>
+**Figure 15 Case 5**  
 
 ## 6 Analysis
 
@@ -597,3 +552,5 @@ pins | 11 / 360 (3%)
 memory bits | 204544 / 1677312 (12%)
 PLL | 1 / 4 (25%)
 total effect | 161-13 mW
+
+<br>
